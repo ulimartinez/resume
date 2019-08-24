@@ -156,7 +156,7 @@
                     <h4><strong>Contact Me</strong>
                     </h4>
                     <ul class="list-unstyled">
-                        <li><i class="fa fa-phone fa-fw"></i> +52(656) 422-5214</li>
+                        <li><i class="fa fa-phone fa-fw"></i> +1(915) 449 0820</li>
                         <li><i class="fa fa-envelope-o fa-fw"></i> <a href="mailto:ulimartinez96@gmail.com">ulimartinez96@gmail.com</a>
                         </li>
                     </ul>
@@ -173,7 +173,6 @@
                         </li>
                     </ul>
                     <hr class="small">
-                    <p class="text-muted">Copyright &copy; <a href="http://martechnologic.com">Martechnologic</a> 2017</p>
                 </div>
             </div>
         </div>
