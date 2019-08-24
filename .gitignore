@@ -1,1 +1,11 @@
 resume/node_modules
+resume/public/hot
+resume/public/storage
+resume/storage/*.key
+resume/vendor
+resume/.env
+resume/.phpunit.result.cache
+resume/Homestead.json
+resume/Homestead.yaml
+resume/npm-debug.log
+resume/yarn-error.log
