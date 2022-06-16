@@ -83,50 +83,11 @@
                 <div class="col-lg-10 col-lg-offset-1 text-center">
                     <h2>My Work</h2>
                     <hr class="small">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="portfolio-item">
-                                <a href="http://martechnologic.com/cookpal">
-                                    <img class="img-portfolio img-responsive" src= {{ asset("img/portfolio-1.jpg") }}>
-                                </a>
-                                <div class="portfolio-description">
-                                  <p>CookPal</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="portfolio-item">
-                                <a href="http://martechnologic.com/bachego">
-                                    <img class="img-portfolio img-responsive" src= {{ asset("img/portfolio-2.jpg") }}>
-                                </a>
-                                <div class="portfolio-description">
-                                  <p>BacheGO</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="portfolio-item">
-                                <a href="http://ctis.utep.edu">
-                                    <img class="img-portfolio img-responsive" src= {{ asset("img/portfolio-3.jpg") }} alt="">
-                                </a>
-                                <div class="portfolio-description">
-                                  <p>CTIS Website</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="portfolio-item">
-                                <a href="#">
-                                    <img class="img-portfolio img-responsive" src={{ asset("img/portfolio-4.jpg") }} alt="">
-                                </a>
-                                <div class="portfolio-description">
-                                  <p>Martech Agenda</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="row" id="projects" >
                     </div>
                     <!-- /.row (nested) -->
-                    <a href="#" class="btn btn-dark">View More Items</a>
+			<a href="#" class="btn btn-dark" id="repo_link">Repo</a>
+                    <a href="#" class="btn btn-dark" id="loadMore" >View More Items</a>
                 </div>
                 <!-- /.col-lg-10 -->
             </div>
@@ -156,7 +117,7 @@
                     <h4><strong>Contact Me</strong>
                     </h4>
                     <ul class="list-unstyled">
-                        <li><i class="fa fa-phone fa-fw"></i> +1(915) 449 0820</li>
+                        <li><i class="fa fa-phone fa-fw"></i> +1(915) 790 8009</li>
                         <li><i class="fa fa-envelope-o fa-fw"></i> <a href="mailto:ulimartinez96@gmail.com">ulimartinez96@gmail.com</a>
                         </li>
                     </ul>
@@ -198,7 +159,59 @@
             $(this).find('.portfolio-description').slideToggle("fast");
         });
         // Scrolls to the selected menu item on the page
+
+
+	function render_random(repos){
+		var random = Math.floor(Math.random() * Math.floor(repos.length));
+		var repo_name = repos[random].full_name;
+		$.ajax({
+			headers: {
+				'Authorization': 'token {{config('services.github.token')}}'
+			},
+			dataType: 'json',
+			url: "https://api.github.com/repos/" + repo_name + "/readme",
+			success: function(data) {
+				var readme_url = data.download_url;
+				console.log(readme_url);
+				console.log(data);
+				$.ajax({
+					url: readme_url.replace("raw.githubusercontent.com", "cdn.jsdelivr.net/gh").replace("/master", "@master"),
+					success: function(data){
+						$('#projects').html(marked(data));
+						$('#repo_link').attr('href', 'https://github.com/' + repo_name);
+					}
+				});
+			},
+			error: function(){
+				render_random(repos);
+			}
+		});
+	}
+	function get_repos(){
+		var repos = [];
+		$.ajax({
+			headers: {
+				'Authorization': 'token {{config('services.github.token')}}'
+			},
+			dataType: 'json',
+			url: 'https://api.github.com/users/ulimartinez/repos',
+		}).done(function(data) {
+			render_random(data);
+		});
+	}
+
         $(function() {
+		var repos = [];
+		$.ajax({
+			headers: {
+				'Authorization': 'token {{config('services.github.token')}}'
+			},
+			dataType: 'json',
+			url: 'https://api.github.com/users/ulimartinez/repos',
+		}).done(function(data) {
+			render_random(data);
+		});
+
             $('a[href*=#]:not([href=#],[data-toggle],[data-target],[data-slide])').click(function() {
                 if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') || location.hostname == this.hostname) {
                     var target = $(this.hash);
@@ -212,6 +225,8 @@
                 }
             });
         });
+
+	$('#loadMore').click(function(e){ e.preventDefault(); get_repos() });
         //#to-top button appears after scrolling
         var fixed = false;
         $(document).scroll(function() {

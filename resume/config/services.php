@@ -43,5 +43,8 @@ return [
             'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
         ],
     ],
+    'github' => [
+	    'token' => env('GITHUB_TOKEN'),
+    ],
 
 ];
