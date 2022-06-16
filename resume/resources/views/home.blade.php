@@ -177,7 +177,7 @@
 				$.ajax({
 					url: readme_url.replace("raw.githubusercontent.com", "cdn.jsdelivr.net/gh").replace("/master", "@master"),
 					success: function(data){
-						$('#projects').html(marked(data));
+						$('#projects').html(marked.parse(data));
 						$('#repo_link').attr('href', 'https://github.com/' + repo_name);
 					}
 				});
@@ -200,7 +200,7 @@
 		});
 	}
 
-        $(function() {
+        $(document).ready(function() {
 		var repos = [];
 		$.ajax({
 			headers: {

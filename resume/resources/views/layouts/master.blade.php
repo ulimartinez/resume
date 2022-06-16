@@ -36,6 +36,8 @@
     @yield('content')
 </div>
 
+<!-- marked js -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <!-- jQuery -->
 <script src= {{ asset("js/jquery.js") }}></script>
 
@@ -48,8 +50,6 @@
 <!-- d3 force JavaScript -->
 <script src= {{ asset("js/d3-force.js") }}></script>
 
-<!-- marked js -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 @yield('javascript')
 
 </body>
