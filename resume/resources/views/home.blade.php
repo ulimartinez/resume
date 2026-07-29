@@ -30,13 +30,13 @@
     <!-- Header -->
     <header id="top" class="header">
       <div id="video-container">
-        <video autoplay="" loop="" class="vcover" poster= {{ asset("img/typing.jpg") }} >
-            <source src= {{ asset("img/typing.mp4") }} type="video/mp4">
-            <source src= {{ asset("images/typing.webm") }} type="video/webm">
-            <img src= {{ asset("images/fallback3.jpg") }} title="not_supported"  alt="lol">
+        <video autoplay muted playsinline loop class="vcover" poster={{ asset("img/typing.jpg") }}>
+            <source src={{ asset("img/typing.mp4") }} type="video/mp4">
+            <source src={{ asset("img/typing.webm") }} type="video/webm">
+            <img src={{ asset("img/fallback3.jpg") }} title="not_supported" alt="Typing background">
         </video>
       </div>
-        <div class="profile text-vertical-center">
+        <div class="profile">
             <h1>Ulises Martinez</h1>
             <br>
             <div class="round"></div>
@@ -86,8 +86,8 @@
                     <div class="row" id="projects" >
                     </div>
                     <!-- /.row (nested) -->
-			<a href="#" class="btn btn-dark" id="repo_link">Repo</a>
-                    <a href="#" class="btn btn-dark" id="loadMore" >View More Items</a>
+			<a href="https://github.com/ulimartinez" class="btn btn-dark" id="repo_link" target="_blank" rel="noopener noreferrer">Open repo</a>
+                    <a href="#" class="btn btn-dark" id="loadMore">View another project</a>
                 </div>
                 <!-- /.col-lg-10 -->
             </div>
@@ -161,56 +161,133 @@
         // Scrolls to the selected menu item on the page
 
 
-	function render_random(repos){
-		var random = Math.floor(Math.random() * Math.floor(repos.length));
-		var repo_name = repos[random].full_name;
-		$.ajax({
-			headers: {
-				'Authorization': 'token {{config('services.github.token')}}'
-			},
-			dataType: 'json',
-			url: "https://api.github.com/repos/" + repo_name + "/readme",
-			success: function(data) {
-				var readme_url = data.download_url;
-				console.log(readme_url);
-				console.log(data);
-				$.ajax({
-					url: readme_url.replace("raw.githubusercontent.com", "cdn.jsdelivr.net/gh").replace("/master", "@master"),
-					success: function(data){
-						$('#projects').html(marked.parse(data));
-						$('#repo_link').attr('href', 'https://github.com/' + repo_name);
-					}
-				});
-			},
-			error: function(){
-				render_random(repos);
-			}
-		});
-	}
-	function get_repos(){
-		var repos = [];
-		$.ajax({
-			headers: {
-				'Authorization': 'token {{config('services.github.token')}}'
-			},
-			dataType: 'json',
-			url: 'https://api.github.com/users/ulimartinez/repos',
-		}).done(function(data) {
-			render_random(data);
-		});
-	}
+    var repoCache = [];
+    var currentRepo = null;
+
+    function escapeHtml(text) {
+        return $('<div>').text(text || '').html();
+    }
+
+    function pickRandomRepo(repos) {
+        var candidates = repos.filter(function(repo) {
+            return repo && !repo.fork && !repo.archived && repo.html_url;
+        });
+
+        if (!candidates.length) {
+            return null;
+        }
+
+        if (currentRepo && candidates.length > 1) {
+            candidates = candidates.filter(function(repo) {
+                return repo.full_name !== currentRepo.full_name;
+            });
+        }
+
+        if (!candidates.length) {
+            candidates = repos.filter(function(repo) {
+                return repo && repo.html_url;
+            });
+        }
+
+        return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    function renderRepo(repo, markdown) {
+        var title = escapeHtml(repo.name || repo.full_name);
+        var description = repo.description ? '<p class="lead">' + escapeHtml(repo.description) + '</p>' : '';
+
+        $('#projects').html(
+            '<div class="repo-feature">' +
+                '<p class="text-muted">Random public GitHub repo</p>' +
+                '<h3>' + title + '</h3>' +
+                description +
+                '<div class="repo-markdown">' + marked.parse(markdown) + '</div>' +
+            '</div>'
+        );
+
+        $('#repo_link').attr({
+            href: repo.html_url,
+            target: '_blank',
+            rel: 'noopener noreferrer'
+        }).text('Open repo');
+    }
+
+    function renderFallback(repo) {
+        var description = repo.description ? escapeHtml(repo.description) : 'Public repository with no README available.';
+
+        $('#projects').html(
+            '<div class="repo-feature">' +
+                '<p class="text-muted">Random public GitHub repo</p>' +
+                '<h3>' + escapeHtml(repo.name || repo.full_name) + '</h3>' +
+                '<p>' + description + '</p>' +
+            '</div>'
+        );
+
+        $('#repo_link').attr({
+            href: repo.html_url,
+            target: '_blank',
+            rel: 'noopener noreferrer'
+        }).text('Open repo');
+    }
+
+    function loadReadme(repo) {
+        $.ajax({
+            dataType: 'json',
+            url: 'https://api.github.com/repos/' + repo.full_name + '/readme'
+        }).done(function(data) {
+            if (!data.download_url) {
+                renderFallback(repo);
+                return;
+            }
+
+            $.ajax({
+                url: data.download_url,
+                dataType: 'text',
+                success: function(markdown) {
+                    renderRepo(repo, markdown);
+                },
+                error: function() {
+                    renderFallback(repo);
+                }
+            });
+        }).fail(function() {
+            renderFallback(repo);
+        });
+    }
+
+    function loadRandomProject() {
+        if (repoCache.length) {
+            currentRepo = pickRandomRepo(repoCache);
+
+            if (!currentRepo) {
+                $('#projects').html('<p class="lead">No public repos found.</p>');
+                return;
+            }
+
+            loadReadme(currentRepo);
+            return;
+        }
+
+        $.ajax({
+            dataType: 'json',
+            url: 'https://api.github.com/users/ulimartinez/repos?per_page=100&sort=updated&type=owner'
+        }).done(function(data) {
+            repoCache = data.filter(function(repo) {
+                return repo && !repo.fork && !repo.archived;
+            });
+            loadRandomProject();
+        }).fail(function() {
+            $('#projects').html('<p class="lead">GitHub is unavailable right now, so the projects feed could not load.</p>');
+            $('#repo_link').attr({
+                href: 'https://github.com/ulimartinez',
+                target: '_blank',
+                rel: 'noopener noreferrer'
+            }).text('GitHub profile');
+        });
+    }
 
         $(document).ready(function() {
-		var repos = [];
-		$.ajax({
-			headers: {
-				'Authorization': 'token {{config('services.github.token')}}'
-			},
-			dataType: 'json',
-			url: 'https://api.github.com/users/ulimartinez/repos',
-		}).done(function(data) {
-			render_random(data);
-		});
+            loadRandomProject();
 
             $('a[href*=#]:not([href=#],[data-toggle],[data-target],[data-slide])').click(function() {
                 if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') || location.hostname == this.hostname) {
@@ -226,7 +303,7 @@
             });
         });
 
-	$('#loadMore').click(function(e){ e.preventDefault(); get_repos() });
+    $('#loadMore').click(function(e){ e.preventDefault(); loadRandomProject() });
         //#to-top button appears after scrolling
         var fixed = false;
         $(document).scroll(function() {

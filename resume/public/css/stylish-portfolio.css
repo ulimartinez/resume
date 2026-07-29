@@ -10,6 +10,7 @@ html,
 body {
     width: 100%;
     height: 100%;
+    overflow-x: hidden;
 }
 
 body {
@@ -18,10 +19,14 @@ body {
 
 .profile {
   position: absolute;
-  width: 500px;
-  top: calc(50% - 200px);
-  left: calc(50% - 250px);
+  z-index: 1;
+  width: calc(100% - 32px);
+  max-width: 500px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   text-align: center;
+  padding: 0 16px;
 }
 
 .round {
@@ -33,6 +38,8 @@ body {
 
   background-image: url("../img/profile.jpg");
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 
   /*display: block;*/
   content: "";
@@ -176,10 +183,12 @@ hr.small {
 /* Header */
 
 .header {
-    display: table;
+    display: block;
     position: relative;
     width: 100%;
-    height: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+    background: #000;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;
@@ -235,6 +244,32 @@ hr.small {
   display: none;
 }
 
+.repo-feature {
+    text-align: left;
+    background: #fff;
+    color: #333;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+.repo-feature h3 {
+    margin-top: 0;
+}
+
+.repo-markdown {
+    text-align: left;
+}
+
+.repo-markdown img {
+    max-width: 100%;
+    height: auto;
+}
+
+.repo-markdown pre {
+    overflow: auto;
+}
+
 .img-portfolio {
     margin: 0 auto;
 }
@@ -256,6 +291,29 @@ hr.small {
 }
 
 @media(max-width:768px) {
+    .header {
+        min-height: 92vh;
+    }
+
+    .text-vertical-center h1 {
+        font-size: 2.6em;
+    }
+
+    .round {
+        width: 180px;
+        height: 180px;
+        margin-bottom: 16px;
+    }
+
+    .about,
+    .services,
+    .portfolio,
+    .call-to-action,
+    footer {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+
     .map {
         height: 75%;
     }
@@ -278,16 +336,24 @@ footer {
   right: 5px;
 }
 
+#video-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+#video-container video,
 .vcover {
-	position: relative;
-	top: 50%;
-	left: 50%;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
 	min-width: 100%;
-	min-height: 540px;
-	width: auto;
-	height: auto;
+	min-height: 100%;
+	object-fit: cover;
 	margin-bottom: 0px;
-	z-index: -100;
-	-webkit-transform: translateX(-50%) translateY(0%);
-	transform: translateX(-50%) translateY(0%);
+	z-index: 0;
+	-webkit-transform: none;
+	transform: none;
 }
