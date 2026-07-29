@@ -208,6 +208,31 @@ hr.small {
     padding: 50px 0;
 }
 
+#vis {
+    min-height: 520px;
+    overflow: hidden;
+}
+
+#vis svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+#vis text {
+    font-weight: 700;
+}
+
+@media(max-width:768px) {
+    #vis {
+        min-height: 420px;
+    }
+
+    #vis text {
+        font-size: 11px !important;
+    }
+}
+
 .service-item {
     margin-bottom: 30px;
 }

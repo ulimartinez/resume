@@ -347,6 +347,11 @@
             let bubbles = null;
             let labels = null;
             let nodes = [];
+            let scrollRaf = null;
+            let scrollBound = false;
+
+            const xForce = d3.forceX().strength(forceStrength).x(centre.x);
+            const yForce = d3.forceY().strength(forceStrength).y(centre.y);
 
             // charge is dependent on size of the bubble, so bigger towards the middle
             function charge(d) {
@@ -357,8 +362,8 @@
             const simulation = d3.forceSimulation()
                 .force('charge', d3.forceManyBody().strength(charge))
                 // .force('center', d3.forceCenter(centre.x, centre.y))
-                .force('x', d3.forceX().strength(forceStrength).x(centre.x))
-                .force('y', d3.forceY().strength(forceStrength).y(centre.y))
+                .force('x', xForce)
+                .force('y', yForce)
                 .force('collision', d3.forceCollide().radius(d => d.radius + 1));
 
             function dragstarted(d) {
@@ -376,6 +381,40 @@
                 if (!d3.event.active) simulation.alphaTarget(0);
                 d.fx = null;
                 d.fy = null;
+            }
+
+            function updateScrollGravity() {
+                const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+                const progress = Math.max(0, Math.min(1, window.pageYOffset / maxScroll));
+                const wobbleX = (progress - 0.5) * 180;
+                const wobbleY = Math.sin(progress * Math.PI * 2) * 120;
+
+                xForce.x(centre.x + wobbleX);
+                yForce.y(centre.y + wobbleY);
+                simulation.alpha(0.35).restart();
+            }
+
+            function bindScrollGravity() {
+                if (scrollBound) {
+                    return;
+                }
+
+                scrollBound = true;
+
+                window.addEventListener('scroll', function() {
+                    if (scrollRaf) {
+                        return;
+                    }
+
+                    scrollRaf = window.requestAnimationFrame(function() {
+                        scrollRaf = null;
+                        updateScrollGravity();
+                    });
+                }, { passive: true });
+
+                window.addEventListener('resize', function() {
+                    updateScrollGravity();
+                });
             }
 
             // force simulation starts up automatically, which we don't want as there aren't any nodes yet
@@ -418,7 +457,9 @@
                 svg = d3.select(selector)
                     .append('svg')
                     .attr('width', width)
-                    .attr('height', height);
+                    .attr('height', height)
+                    .attr('viewBox', '0 0 ' + width + ' ' + height)
+                    .attr('preserveAspectRatio', 'xMidYMid meet');
 
                 // bind nodes data to circle elements
                 const elements = svg.selectAll('.bubble')
@@ -440,7 +481,11 @@
                     .append('text')
                     .attr('dy', '.3em')
                     .style('text-anchor', 'middle')
-                    .style('font-size', 10)
+                    .style('font-size', d => Math.max(12, Math.min(24, d.radius * 0.28)) + 'px')
+                    .style('font-weight', 700)
+                    .style('paint-order', 'stroke')
+                    .style('stroke', 'rgba(255,255,255,0.7)')
+                    .style('stroke-width', '3px')
                     .text(d => d.Name)
                     .attr("fill", "#337ab7");
 
@@ -449,6 +494,9 @@
                 simulation.nodes(nodes)
                     .on('tick', ticked)
                     .restart();
+
+                updateScrollGravity();
+                bindScrollGravity();
             };
 
             // callback function called after every tick of the force simulation
@@ -501,73 +549,6 @@
         }
 
         display(dataset.children);
-
-        var diameter = 600;
-
-        var bubble = d3.pack(dataset)
-            .size([diameter, diameter])
-            .padding(1.5);
-
-        var svg = d3.select("#skills")
-            .append("svg")
-            .attr("width", diameter)
-            .attr("height", diameter)
-            .attr("class", "bubble")
-            .attr("viewBox", "0 0 " + diameter + " " + diameter);
-
-        var nodes = d3.hierarchy(dataset)
-            .sum(function(d) { return d.Count; });
-        console.log(nodes);
-
-        var node = svg.selectAll(".node")
-            .data(bubble(nodes).descendants())
-            .enter()
-            .filter(function(d){
-                return  !d.children
-            })
-            .append("g")
-            .attr("class", "node")
-            .attr("transform", function(d) {
-                return "translate(" + d.x + "," + d.y + ")";
-            });
-
-        node.append("title")
-            .text(function(d) {
-                return d.data.Name + ": " + d.data.Count + "%";
-            });
-
-        node.append("circle")
-            .attr("r", function(d) {
-                return d.r;
-            })
-            .style("fill", function(d,i) {
-                return "white"
-            });
-
-        node.append("text")
-            .attr("dy", ".2em")
-            .style("text-anchor", "middle")
-            .text(function(d) {
-                return d.data.Name.substring(0, d.r / 3);
-            })
-            .attr("font-family", "sans-serif")
-            .attr("font-size", function(d){
-                return d.r/5;
-            })
-            .attr("font-weight", 700)
-            .attr("fill", "#337ab7");
-
-        d3.select(self.frameElement)
-            .style("height", diameter + "px");
-
-        var chart = $(".bubble"),
-            aspect = chart.width() / chart.height(),
-            container = chart.parent();
-        $(window).on("resize", function() {
-            var targetWidth = container.width();
-            chart.attr("width", targetWidth);
-            chart.attr("height", Math.round(targetWidth / aspect));
-        }).trigger("resize");
 
     </script>
 @endsection
