@@ -39,7 +39,7 @@
         <div class="profile">
             <h1>Ulises Martinez</h1>
             <br>
-            <div class="round"></div>
+            <img class="round" src="{{ asset('img/profile.jpg') }}" alt="Ulises Martinez">
         </div>
     </header>
 
