@@ -39,7 +39,7 @@
         <div class="profile">
             <h1>Ulises Martinez</h1>
             <br>
-            <img class="round" src="/img/profile.jpg" alt="Ulises Martinez">
+            <img class="round" src="/img/IMG_2645.jpg" alt="Ulises Martinez">
         </div>
     </header>
 
